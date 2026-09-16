@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#24312A" />
+<title>This Week's Table</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Caveat:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #24312A; --bg-panel: #2E3D34; --bg-panel-alt: #33453A;
+    --cream: #F5EFDF; --cream-dim: rgba(245,239,223,0.58);
+    --mustard: #E3B23C; --sage: #8FA37E; --tomato: #C1502E;
+    --line: rgba(245,239,223,0.16);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--cream); font-family: 'Inter', sans-serif; }
+  .board { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+  .eyebrow { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--mustard); margin-bottom:6px; }
+  .title { font-family:'Fraunces',serif; font-size:34px; font-weight:600; margin:0 0 4px; }
+  .subtitle { font-family:'Caveat',cursive; font-size:20px; color:var(--cream-dim); }
+  .save-status { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--cream-dim); margin-top:6px; }
+  .link-btn { background:none; border:none; color:var(--cream-dim); text-decoration:underline; font-family:'IBM Plex Mono',monospace; font-size:11px; cursor:pointer; padding:0; margin-top:8px; margin-right:14px; }
+  .name-inputs, .target-inputs { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .name-inputs input, .target-inputs input { background:var(--bg-panel); border:1px solid var(--line); color:var(--cream); border-radius:8px; padding:6px 10px; font-family:'Inter',sans-serif; font-size:13px; width:110px; }
+
+  .day-tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; margin:18px 0; border-bottom:1px solid var(--line); }
+  .day-tab { font-family:'Caveat',cursive; font-size:22px; font-weight:700; background:none; border:none; color:var(--cream-dim); padding:4px 14px 10px; cursor:pointer; position:relative; white-space:nowrap; }
+  .day-tab.active { color: var(--mustard); }
+  .day-tab.active::after { content:''; position:absolute; bottom:-1px; left:8px; right:8px; height:3px; background:var(--mustard); border-radius:3px; }
+  .day-tab-count { font-family:'IBM Plex Mono',monospace; font-size:10px; display:block; color:var(--sage); }
+
+  .slots { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:30px; }
+  @media (max-width:640px) { .slots { grid-template-columns:1fr; } .categories { grid-template-columns:1fr !important; } }
+  .slot { background:var(--bg-panel); border:1px solid var(--line); border-radius:12px; padding:14px; min-height:120px; }
+  .slot-label { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--cream-dim); margin-bottom:8px; }
+  .slot-empty { display:flex; flex-direction:column; justify-content:center; cursor:pointer; border-style:dashed; }
+  .slot-empty:hover { background:var(--bg-panel-alt); }
+  .add-prompt { color:var(--cream-dim); font-size:14px; }
+  .meal-name { font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin-bottom:8px; }
+  .cook-badge { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 8px; border-radius:20px; margin-bottom:8px; }
+  .ingredient-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+  .tag { font-size:11px; background:var(--bg-panel-alt); padding:3px 8px; border-radius:6px; color:var(--cream-dim); }
+  .slot-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .mini-btn { background:none; border:none; color:var(--sage); font-size:11px; cursor:pointer; padding:0; text-decoration:underline; }
+  .mini-btn-danger { color:var(--tomato); }
+
+  .meal-form { display:flex; flex-direction:column; gap:8px; }
+  .input { background:var(--bg-panel-alt); border:1px solid var(--line); color:var(--cream); border-radius:8px; padding:8px 10px; font-family:'Inter',sans-serif; font-size:13px; width:100%; }
+  .input::placeholder { color:var(--cream-dim); }
+  .cook-row { display:flex; gap:6px; }
+  .chip { font-family:'IBM Plex Mono',monospace; font-size:10px; background:none; padding:4px 9px; border-radius:20px; cursor:pointer; opacity:.5; }
+  .chip.active { opacity:1; }
+  .form-actions { display:flex; gap:8px; }
+  .btn { font-family:'Inter',sans-serif; font-size:12px; font-weight:600; padding:7px 14px; border-radius:8px; cursor:pointer; border:none; }
+  .btn-primary { background:var(--mustard); color:var(--bg); }
+  .btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-ghost { background:none; color:var(--cream-dim); text-decoration:underline; }
+
+  .section-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; margin-top:36px; }
+  .section-title { font-family:'Fraunces',serif; font-size:22px; font-weight:600; }
+  .section-progress { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--cream-dim); }
+  .section-sub { font-family:'Caveat',cursive; font-size:17px; color:var(--cream-dim); margin-bottom:16px; }
+
+  .add-item-row { display:flex; gap:8px; margin-bottom:18px; }
+  .add-item-row .input { flex:1; }
+  .categories { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+  .category-title { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--mustard); border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:8px; }
+  .item-row { display:flex; align-items:center; gap:10px; padding:5px 0; cursor:pointer; }
+  .chalk-check { width:18px; height:18px; border-radius:50%; border:1.5px solid var(--cream-dim); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--bg); }
+  .chalk-check.checked { background:var(--sage); border-color:var(--sage); }
+  .item-text.checked { color:var(--cream-dim); text-decoration:line-through; }
+  .item-count { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--cream-dim); }
+  .empty-note { color:var(--cream-dim); font-size:13px; font-style:italic; }
+
+  .log-row { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .log-meta { color:var(--cream-dim); font-family:'IBM Plex Mono',monospace; font-size:10px; }
+  .macro-pill { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--sage); white-space:nowrap; }
+  .insights-box { background:var(--bg-panel); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:14px; font-size:14px; line-height:1.5; }
+  .config-warning { background:var(--tomato); color:var(--cream); padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:16px; }
+</style>
+</head>
+<body>
+<div class="board" id="app">Loading…</div>
+
+<script>
+/* ============ CONFIG ============ */
+/* Paste the Web App URL you get from deploying Code.gs in Apps Script. */
+const CONFIG = {
+  SHEET_URL: "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE"
+};
+/* ================================= */
+
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const SLOTS = ["Breakfast","Lunch","Dinner"];
+const COOKS = [
+  { id:"you", label:"You", color:"var(--sage)" },
+  { id:"partner", label:"Partner", color:"var(--mustard)" },
+  { id:"both", label:"Both", color:"var(--cream)" }
+];
+const CATEGORY_KEYWORDS = {
+  "Produce": ["lettuce","tomato","onion","garlic","pepper","spinach","carrot","potato","avocado","lime","lemon","cilantro","basil","broccoli","mushroom","cucumber","apple","banana","berries","corn","zucchini","kale","celery"],
+  "Dairy & Eggs": ["milk","cheese","butter","egg","yogurt","cream","sour cream","mozzarella","parmesan","cheddar"],
+  "Meat & Seafood": ["chicken","beef","pork","turkey","shrimp","salmon","bacon","sausage","steak","fish","ground beef"],
+  "Pantry": ["rice","pasta","flour","sugar","oil","beans","broth","stock","tortilla","bread","sauce","spice","salt","cumin","paprika","oats","cereal","canned"]
+};
+function categorize(item) {
+  const lower = item.toLowerCase();
+  for (const [cat, words] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (words.some(w => lower.includes(w))) return cat;
+  }
+  return "Other";
+}
+const CATEGORY_ORDER = ["Produce","Dairy & Eggs","Meat & Seafood","Pantry","Other"];
+
+function emptyWeek() {
+  const w = {};
+  DAYS.forEach(d => w[d] = { Breakfast:null, Lunch:null, Dinner:null });
+  return w;
+}
+
+let state = {
+  week: emptyWeek(),
+  extraItems: [],
+  checked: {},
+  names: { you:"You", partner:"Partner" },
+  targets: { calories:"", protein:"", carbs:"", fat:"" }
+};
+let log = [];
+let ui = { selectedDay:"Mon", editingSlot:null, editingNames:false, editingTargets:false, insights:"", insightsLoading:false, saveStatus:"idle", loaded:false };
+let saveTimer = null;
+
+/* ---------- API ---------- */
+async function apiGetState() {
+  const res = await fetch(CONFIG.SHEET_URL + "?action=state");
+  const data = await res.json();
+  return data;
+}
+async function apiSaveState(s) {
+  await fetch(CONFIG.SHEET_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action:"saveState", state:s })
+  });
+}
+async function apiAppendLog(entry) {
+  const res = await fetch(CONFIG.SHEET_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action:"appendLog", entry })
+  });
+  return res.json();
+}
+async function apiInsights(targets) {
+  const res = await fetch(CONFIG.SHEET_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action:"insights", targets })
+  });
+  return res.json();
+}
+
+/* ---------- persistence ---------- */
+function scheduleSave() {
+  ui.saveStatus = "saving"; render();
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try { await apiSaveState(state); ui.saveStatus = "saved"; }
+    catch (e) { ui.saveStatus = "error"; }
+    render();
+  }, 600);
+}
+
+/* ---------- grocery ---------- */
+function computeGrocery() {
+  const map = {};
+  Object.values(state.week).forEach(day => {
+    Object.values(day).forEach(meal => {
+      if (!meal) return;
+      meal.ingredients.forEach(i => {
+        const key = i.text.toLowerCase();
+        if (!map[key]) map[key] = { text:i.text, category:i.category, count:0 };
+        map[key].count++;
+      });
+    });
+  });
+  state.extraItems.forEach(item => {
+    const key = item.toLowerCase();
+    if (!map[key]) map[key] = { text:item, category:categorize(item), count:1 };
+  });
+  const grouped = {};
+  CATEGORY_ORDER.forEach(c => grouped[c] = []);
+  Object.values(map).forEach(item => grouped[item.category].push(item));
+  return grouped;
+}
+
+/* ---------- render ---------- */
+function el(html) {
+  const t = document.createElement("template");
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+
+function render() {
+  const app = document.getElementById("app");
+  if (!ui.loaded) { app.innerHTML = `<div style="text-align:center;padding:80px 0;font-family:'Caveat',cursive;font-size:22px;color:var(--cream-dim)">setting the table…</div>`; return; }
+
+  const grocery = computeGrocery();
+  const totalItems = Object.values(grocery).reduce((a,b)=>a+b.length,0);
+  const checkedCount = Object.values(state.checked).filter(Boolean).length;
+  const plannedCount = Object.values(state.week).reduce((acc,d)=>acc+Object.values(d).filter(Boolean).length,0);
+  const configMissing = CONFIG.SHEET_URL.indexOf("PASTE_YOUR") === 0;
+
+  app.innerHTML = `
+    ${configMissing ? `<div class="config-warning">Set CONFIG.SHEET_URL at the top of index.html to your deployed Apps Script Web App URL.</div>` : ""}
+    <div class="eyebrow">Week of planning</div>
+    <div class="title">This Week's Table</div>
+    <div class="subtitle">${plannedCount} meals planned so far</div>
+    <div class="save-status">${ui.saveStatus === "saving" ? "saving…" : ui.saveStatus === "saved" ? "✓ saved to your sheet" : ui.saveStatus === "error" ? "couldn't save — check the sheet URL" : ""}</div>
+    <div>
+      <button class="link-btn" id="toggle-names">edit names</button>
+      <button class="link-btn" id="toggle-targets">macro targets</button>
+    </div>
+    ${ui.editingNames ? `
+      <div class="name-inputs">
+        <input id="name-you" value="${state.names.you}" />
+        <input id="name-partner" value="${state.names.partner}" />
+        <button class="mini-btn" id="names-done">done</button>
+      </div>` : ""}
+    ${ui.editingTargets ? `
+      <div class="target-inputs">
+        <input id="t-cal" placeholder="kcal" value="${state.targets.calories}" style="width:70px" />
+        <input id="t-pro" placeholder="protein g" value="${state.targets.protein}" style="width:80px" />
+        <input id="t-carb" placeholder="carbs g" value="${state.targets.carbs}" style="width:80px" />
+        <input id="t-fat" placeholder="fat g" value="${state.targets.fat}" style="width:70px" />
+        <button class="mini-btn" id="targets-done">done</button>
+      </div>` : ""}
+
+    <div class="day-tabs">
+      ${DAYS.map(d => {
+        const count = Object.values(state.week[d]).filter(Boolean).length;
+        return `<button class="day-tab ${ui.selectedDay===d?'active':''}" data-day="${d}">${d}<span class="day-tab-count">${count>0?count+'/3':''}</span></button>`;
+      }).join("")}
+    </div>
+
+    <div class="slots">
+      ${SLOTS.map(slot => renderSlot(ui.selectedDay, slot)).join("")}
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Grocery List</div>
+      ${totalItems>0 ? `<div class="section-progress">${checkedCount}/${totalItems} in cart</div>` : ""}
+    </div>
+    <div class="section-sub">builds itself from what you plan</div>
+
+    <div class="add-item-row">
+      <input class="input" id="extra-input" placeholder="Add something not tied to a meal (paper towels, coffee...)" />
+      <button class="btn btn-primary" id="extra-add">Add</button>
+    </div>
+
+    ${totalItems === 0 ? `<div class="empty-note">Plan a meal with ingredients above and they'll show up here.</div>` : `
+      <div class="categories">
+        ${CATEGORY_ORDER.filter(c=>grocery[c].length>0).map(cat => `
+          <div class="category-block">
+            <div class="category-title">${cat}</div>
+            ${grocery[cat].map(item => {
+              const key = item.text.toLowerCase();
+              const isChecked = !!state.checked[key];
+              return `<div class="item-row" data-item="${key}">
+                <div class="chalk-check ${isChecked?'checked':''}">${isChecked?'✓':''}</div>
+                <div class="item-text ${isChecked?'checked':''}">${item.text}</div>
+                ${item.count>1?`<div class="item-count">×${item.count}</div>`:""}
+              </div>`;
+            }).join("")}
+          </div>
+        `).join("")}
+      </div>
+    `}
+
+    <div class="section-header">
+      <div class="section-title">History & Insights</div>
+    </div>
+    <div class="section-sub">what you've actually logged as eaten</div>
+    <button class="btn btn-primary" id="get-insights" ${log.length===0?"disabled":""}>${ui.insightsLoading?"reading your week…":"Get AI insights"}</button>
+    ${ui.insights ? `<div class="insights-box">${ui.insights}</div>` : ""}
+    <div style="margin-top:16px">
+      ${log.length===0 ? `<div class="empty-note">Log a meal as eaten from a slot above and it'll show up here.</div>` :
+        log.slice().reverse().slice(0,20).map(e => `
+          <div class="log-row">
+            <div>
+              <div>${e.name}</div>
+              <div class="log-meta">${e.date} · ${e.day} ${e.slot}</div>
+            </div>
+            ${e.macros ? `<div class="macro-pill">${e.macros.calories} kcal · ${e.macros.protein}p</div>` : `<div class="macro-pill">—</div>`}
+          </div>
+        `).join("")
+      }
+    </div>
+  `;
+  wire();
+}
+
+function renderSlot(day, slot) {
+  const meal = state.week[day][slot];
+  const editingThis = ui.editingSlot && ui.editingSlot.day===day && ui.editingSlot.slot===slot;
+
+  if (editingThis) {
+    const f = ui.editingSlot;
+    return `<div class="slot">
+      <div class="slot-label">${slot}</div>
+      <div class="meal-form">
+        <input class="input" id="form-name" placeholder="What's cooking?" value="${f.name||''}" />
+        <div class="cook-row">
+          ${COOKS.map(c=>`<button class="chip ${f.cook===c.id?'active':''}" data-cook="${c.id}" style="border:1px solid ${c.color};color:${f.cook===c.id?'var(--bg)':c.color};background:${f.cook===c.id?c.color:'none'}">${c.label}</button>`).join("")}
+        </div>
+        <input class="input" id="form-ingredients" placeholder="Ingredients, comma separated" value="${f.ingredients||''}" />
+        <div class="form-actions">
+          <button class="btn btn-primary" id="form-save">Save</button>
+          <button class="btn btn-ghost" id="form-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (!meal) {
+    return `<div class="slot slot-empty" data-add="${day}|${slot}">
+      <div class="slot-label">${slot}</div>
+      <div class="add-prompt">+ add meal</div>
+    </div>`;
+  }
+
+  const cookInfo = COOKS.find(c=>c.id===meal.cook);
+  return `<div class="slot">
+    <div class="slot-label">${slot}</div>
+    <div class="meal-name">${meal.name}</div>
+    <div class="cook-badge" style="border:1px solid ${cookInfo.color};color:${cookInfo.color}">${cookInfo.label}</div>
+    ${meal.ingredients.length ? `<div class="ingredient-tags">${meal.ingredients.map(i=>`<span class="tag">${i.text}</span>`).join("")}</div>` : ""}
+    <div class="slot-actions">
+      <button class="mini-btn" data-edit="${day}|${slot}">edit</button>
+      <button class="mini-btn mini-btn-danger" data-remove="${day}|${slot}">remove</button>
+      <button class="mini-btn" data-log="${day}|${slot}">log as eaten</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- wiring ---------- */
+function wire() {
+  document.querySelectorAll("[data-day]").forEach(b => b.onclick = () => { ui.selectedDay = b.dataset.day; render(); });
+
+  document.querySelectorAll("[data-add]").forEach(b => b.onclick = () => {
+    const [day, slot] = b.dataset.add.split("|");
+    ui.editingSlot = { day, slot, name:"", cook:"you", ingredients:"" };
+    render();
+  });
+  document.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => {
+    const [day, slot] = b.dataset.edit.split("|");
+    const meal = state.week[day][slot];
+    ui.editingSlot = { day, slot, name:meal.name, cook:meal.cook, ingredients:meal.ingredients.map(i=>i.text).join(", ") };
+    render();
+  });
+  document.querySelectorAll("[data-remove]").forEach(b => b.onclick = () => {
+    const [day, slot] = b.dataset.remove.split("|");
+    state.week[day][slot] = null;
+    render(); scheduleSave();
+  });
+  document.querySelectorAll("[data-log]").forEach(b => b.onclick = async () => {
+    const [day, slot] = b.dataset.log.split("|");
+    const meal = state.week[day][slot];
+    b.textContent = "logging…"; b.disabled = true;
+    const entry = { date: new Date().toISOString().slice(0,10), day, slot, name: meal.name, ingredients: meal.ingredients, cook: meal.cook };
+    try {
+      const result = await apiAppendLog(entry);
+      entry.macros = result.macros || null;
+      log.push(entry);
+      b.textContent = "✓ logged";
+    } catch (e) {
+      b.textContent = "failed";
+    }
+    setTimeout(render, 900);
+  });
+
+  const nameBtn = document.getElementById("toggle-names");
+  if (nameBtn) nameBtn.onclick = () => { ui.editingNames = !ui.editingNames; render(); };
+  const namesDone = document.getElementById("names-done");
+  if (namesDone) namesDone.onclick = () => {
+    state.names.you = document.getElementById("name-you").value;
+    state.names.partner = document.getElementById("name-partner").value;
+    ui.editingNames = false; render(); scheduleSave();
+  };
+
+  const targetBtn = document.getElementById("toggle-targets");
+  if (targetBtn) targetBtn.onclick = () => { ui.editingTargets = !ui.editingTargets; render(); };
+  const targetsDone = document.getElementById("targets-done");
+  if (targetsDone) targetsDone.onclick = () => {
+    state.targets = {
+      calories: document.getElementById("t-cal").value,
+      protein: document.getElementById("t-pro").value,
+      carbs: document.getElementById("t-carb").value,
+      fat: document.getElementById("t-fat").value
+    };
+    ui.editingTargets = false; render(); scheduleSave();
+  };
+
+  const formName = document.getElementById("form-name");
+  if (formName) formName.oninput = () => { ui.editingSlot.name = formName.value; };
+  const formIng = document.getElementById("form-ingredients");
+  if (formIng) formIng.oninput = () => { ui.editingSlot.ingredients = formIng.value; };
+  document.querySelectorAll("[data-cook]").forEach(b => b.onclick = () => { ui.editingSlot.cook = b.dataset.cook; render(); });
+  const formSave = document.getElementById("form-save");
+  if (formSave) formSave.onclick = () => {
+    const f = ui.editingSlot;
+    if (!f.name || !f.name.trim()) return;
+    const ingredients = (f.ingredients||"").split(",").map(s=>s.trim()).filter(Boolean).map(text=>({text, category:categorize(text)}));
+    state.week[f.day][f.slot] = { name: f.name.trim(), cook: f.cook, ingredients };
+    ui.editingSlot = null; render(); scheduleSave();
+  };
+  const formCancel = document.getElementById("form-cancel");
+  if (formCancel) formCancel.onclick = () => { ui.editingSlot = null; render(); };
+
+  const extraAdd = document.getElementById("extra-add");
+  const extraInput = document.getElementById("extra-input");
+  if (extraAdd) extraAdd.onclick = () => {
+    if (extraInput.value.trim()) { state.extraItems.push(extraInput.value.trim()); render(); scheduleSave(); }
+  };
+  if (extraInput) extraInput.onkeydown = (e) => {
+    if (e.key === "Enter" && extraInput.value.trim()) { state.extraItems.push(extraInput.value.trim()); render(); scheduleSave(); }
+  };
+
+  document.querySelectorAll("[data-item]").forEach(row => row.onclick = () => {
+    const key = row.dataset.item;
+    state.checked[key] = !state.checked[key];
+    render(); scheduleSave();
+  });
+
+  const insightsBtn = document.getElementById("get-insights");
+  if (insightsBtn) insightsBtn.onclick = async () => {
+    ui.insightsLoading = true; render();
+    try {
+      const result = await apiInsights(state.targets);
+      ui.insights = result.text || "Couldn't generate insights right now.";
+    } catch (e) {
+      ui.insights = "Couldn't generate insights right now.";
+    }
+    ui.insightsLoading = false; render();
+  };
+}
+
+/* ---------- boot ---------- */
+async function boot() {
+  try {
+    const data = await apiGetState();
+    if (data.state) {
+      state = Object.assign(state, data.state);
+      if (!state.week) state.week = emptyWeek();
+    }
+    if (data.log) log = data.log;
+  } catch (e) {
+    console.error("Failed to load from sheet:", e);
+  }
+  ui.loaded = true;
+  render();
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+boot();
+</script>
+</body>
+</html>
