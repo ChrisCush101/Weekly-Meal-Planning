@@ -136,19 +136,19 @@ let saveTimer = null;
 
 /* ---------- API ---------- */
 async function apiGetState() {
-  const res = await fetch(CONFIG.SHEET_URL + "?action=state");
+  const res = await fetch(https://script.google.com/macros/s/AKfycbwU7IaC7mdX3pfFeV3ckRUQarijXfZ8MytG5fcb_DCYVFfyoqG9WpJg_BY6oyLmDJ90/exec + "?action=state");
   const data = await res.json();
   return data;
 }
 async function apiSaveState(s) {
-  await fetch(CONFIG.SHEET_URL, {
+  await fetch(https://script.google.com/macros/s/AKfycbwU7IaC7mdX3pfFeV3ckRUQarijXfZ8MytG5fcb_DCYVFfyoqG9WpJg_BY6oyLmDJ90/exec, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ action:"saveState", state:s })
   });
 }
 async function apiAppendLog(entry) {
-  const res = await fetch(CONFIG.SHEET_URL, {
+  const res = await fetch(https://script.google.com/macros/s/AKfycbwU7IaC7mdX3pfFeV3ckRUQarijXfZ8MytG5fcb_DCYVFfyoqG9WpJg_BY6oyLmDJ90/exec, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ action:"appendLog", entry })
@@ -156,7 +156,7 @@ async function apiAppendLog(entry) {
   return res.json();
 }
 async function apiInsights(targets) {
-  const res = await fetch(CONFIG.SHEET_URL, {
+  const res = await fetch(https://script.google.com/macros/s/AKfycbwU7IaC7mdX3pfFeV3ckRUQarijXfZ8MytG5fcb_DCYVFfyoqG9WpJg_BY6oyLmDJ90/exec, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ action:"insights", targets })
@@ -213,10 +213,10 @@ function render() {
   const totalItems = Object.values(grocery).reduce((a,b)=>a+b.length,0);
   const checkedCount = Object.values(state.checked).filter(Boolean).length;
   const plannedCount = Object.values(state.week).reduce((acc,d)=>acc+Object.values(d).filter(Boolean).length,0);
-  const configMissing = CONFIG.SHEET_URL.indexOf("PASTE_YOUR") === 0;
+  const configMissing = https://script.google.com/macros/s/AKfycbwU7IaC7mdX3pfFeV3ckRUQarijXfZ8MytG5fcb_DCYVFfyoqG9WpJg_BY6oyLmDJ90/exec.indexOf("PASTE_YOUR") === 0;
 
   app.innerHTML = `
-    ${configMissing ? `<div class="config-warning">Set CONFIG.SHEET_URL at the top of index.html to your deployed Apps Script Web App URL.</div>` : ""}
+    ${configMissing ? `<div class="config-warning">Set https://script.google.com/macros/s/AKfycbwU7IaC7mdX3pfFeV3ckRUQarijXfZ8MytG5fcb_DCYVFfyoqG9WpJg_BY6oyLmDJ90/exec at the top of index.html to your deployed Apps Script Web App URL.</div>` : ""}
     <div class="eyebrow">Week of planning</div>
     <div class="title">This Week's Table</div>
     <div class="subtitle">${plannedCount} meals planned so far</div>
